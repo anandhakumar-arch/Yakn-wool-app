@@ -1,7 +1,7 @@
 {
   "name": "YAKNWOOL Expense Manager",
   "short_name": "YAKNWOOL",
-  "start_url": "./index.html",
+  "start_url": "./",
   "display": "standalone",
   "background_color": "#f4f7fb",
   "theme_color": "#087cf0",
