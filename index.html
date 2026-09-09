@@ -1,57 +1,132 @@
-<!doctype html><html lang="en"><head>
-<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<meta name="theme-color" content="#087cf0"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="YAKNWOOL">
-<link rel="manifest" href="manifest.webmanifest"><title>YAKNWOOL Expense Manager</title>
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#147ef5">
+<link rel="manifest" href="manifest.webmanifest">
+<title>YAKNWOOL Expense Manager</title>
 <style>
-*{box-sizing:border-box}body{margin:0;background:#f4f7fb;color:#172033;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif}.app{max-width:540px;margin:auto;padding-bottom:82px}
-header{background:#fff;padding:16px 18px;position:sticky;top:0;z-index:5;border-bottom:1px solid #e7ebf0}h1{font-size:22px;margin:0}.sub{color:#748093;font-size:12px;margin-top:3px}
-.view{display:none}.view.active{display:block}main{padding:12px}.card{background:#fff;border-radius:16px;padding:15px;margin-bottom:12px;box-shadow:0 2px 10px #00000012}.balance{background:#087cf0;color:#fff;border-radius:15px;text-align:center;padding:20px}.balance strong{display:block;font-size:32px;margin-top:4px}.grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}.metric{text-align:center}.metric b{display:block;font-size:17px}.metric small{color:#748093}.green{color:#16834b}.red{color:#d94343}.orange{color:#d88700}
-.actions{display:grid;grid-template-columns:1fr 1fr;gap:9px}.btn{border:0;border-radius:11px;padding:13px;font-weight:700;background:#087cf0;color:#fff}.btn.secondary{background:#e8f2ff;color:#087cf0}.btn.danger{background:#fff0f0;color:#d94343}.title{font-weight:800;font-size:16px;margin-bottom:9px}.row{display:flex;justify-content:space-between;gap:10px;padding:10px 0;border-bottom:1px solid #edf0f4}.row:last-child{border:0}.muted{color:#748093;font-size:12px}
-label{display:block;font-size:12px;color:#657184;margin:10px 0 5px}input,select,textarea{width:100%;padding:12px;border:1px solid #dce2ea;border-radius:10px;background:#fff;font-size:15px;color:#172033}textarea{min-height:70px}.tabs{display:grid;grid-template-columns:repeat(3,1fr);gap:5px;background:#eef2f7;padding:4px;border-radius:10px}.tabs button{border:0;background:transparent;padding:9px;border-radius:8px}.tabs .sel{background:#fff;font-weight:800;box-shadow:0 1px 4px #0001}
-.entry{display:flex;gap:10px;align-items:center}.icon{width:42px;height:42px;border-radius:12px;background:#edf4ff;display:grid;place-items:center}.entrymain{flex:1;min-width:0}.entrytitle{font-weight:700;font-size:14px}.entrymeta{font-size:11px;color:#748093;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.right{text-align:right}.badge{font-size:10px;background:#fff1cf;color:#9a6500;border-radius:7px;padding:3px 6px;display:inline-block}
-nav{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:min(540px,100%);background:#fff;border-top:1px solid #ddd;display:grid;grid-template-columns:repeat(4,1fr);padding:8px 5px calc(8px + env(safe-area-inset-bottom));z-index:10}nav button{border:0;background:none;color:#748093;font-size:11px;padding:5px}nav .on{color:#087cf0;font-weight:800}
-</style></head><body><div class="app"><header><h1>YAKNWOOL</h1><div class="sub">Expense Manager · Version 1</div></header><main>
-<section id="home" class="view active"><div class="card"><div class="balance">Current Balance<strong id="bal">₹0</strong></div></div>
-<div class="card grid"><div class="metric green"><b id="rec">₹0</b><small>Received</small></div><div class="metric red"><b id="exp">₹0</b><small>Expense</small></div><div class="metric orange"><b id="adv">₹0</b><small>Advance</small></div></div>
-<div class="actions card"><button class="btn" onclick="openAdd('Expense')">＋ Add Entry</button><button class="btn secondary" onclick="scan()">📷 Scan Bill</button></div>
-<div class="card"><div class="title">Expenses by Category</div><div id="homeCats"></div></div><div class="card"><div class="title">Recent Entries</div><div id="recent"></div></div></section>
-<section id="entries" class="view"><div class="card"><div class="title">Entries</div><input id="q" placeholder="🔎 Search..." oninput="renderEntries()"><div style="height:8px"></div><div class="tabs"><button class="sel" onclick="filterBy('All',this)">All</button><button onclick="filterBy('Expense',this)">Expenses</button><button onclick="filterBy('Advance',this)">Advances</button></div></div><div id="list"></div></section>
-<section id="reports" class="view"><div class="card"><div class="title">Monthly Summary</div><div id="summary"></div></div><div class="card"><div class="title">Category Report</div><div id="report"></div></div><div class="card"><div class="title">Advance Control</div><div id="advanceReport"></div></div></section>
-<section id="more" class="view"><div class="card"><div class="title">Data</div><button class="btn" style="width:100%;margin-bottom:8px" onclick="csv()">⬇ Export CSV</button><button class="btn secondary" style="width:100%;margin-bottom:8px" onclick="backup()">💾 Backup</button><button class="btn secondary" style="width:100%;margin-bottom:8px" onclick="document.getElementById('restore').click()">♻ Restore</button><input id="restore" type="file" accept=".json" hidden onchange="restore(event)"><button class="btn danger" style="width:100%" onclick="resetAll()">Reset all data</button></div>
-<div class="card"><div class="title">Categories</div><div id="catSettings"></div><button class="btn secondary" style="width:100%;margin-top:8px" onclick="addCat()">＋ Add Category</button></div><div class="card muted">V1 stores data locally on this device. Cloud sync, login, OCR and multi-user access are planned for V2.</div></section>
-<section id="add" class="view"><div class="card"><div class="title">Add Entry</div><div class="tabs"><button id="btExpense" class="sel" onclick="setType('Expense')">Expense</button><button id="btAdvance" onclick="setType('Advance')">Advance</button><button id="btReceived" onclick="setType('Received')">Received</button></div>
-<label>Date</label><input id="date" type="date"><label>Description *</label><input id="desc" placeholder="e.g. Sunil food allowance"><label>Person / Vendor</label><input id="person" placeholder="e.g. Sunil"><label>Category *</label><select id="category"></select><label>Amount *</label><input id="amount" type="number" inputmode="decimal" placeholder="0"><label>Payment Type</label><select id="payment"><option>Cash Advance</option><option>Cash</option><option>Bank Transfer</option><option>Card</option><option>UPI</option><option>Other</option></select><label>Project</label><input id="project" placeholder="Optional"><label>Invoice Required</label><select id="invoice"><option>No</option><option>Yes</option></select><label>Invoice Submitted</label><select id="submitted"><option>No</option><option>Yes</option></select><label>Recovery Required</label><select id="recovery"><option>No</option><option>Yes</option></select><label>Remarks</label><textarea id="remarks"></textarea><div class="actions" style="margin-top:12px"><button class="btn secondary" onclick="show('home')">Cancel</button><button class="btn" onclick="save()">Save Entry</button></div></div></section>
-</main><nav><button class="on" onclick="show('home',this)">⌂<br>Home</button><button onclick="show('entries',this)">☷<br>Entries</button><button onclick="show('reports',this)">▥<br>Reports</button><button onclick="show('more',this)">•••<br>More</button></nav></div>
+*{box-sizing:border-box}body{margin:0;background:#f3f6fa;color:#17233b;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif;padding-bottom:82px}
+header{background:#fff;padding:42px 20px 22px;border-bottom:1px solid #e5e9ef;position:sticky;top:0;z-index:5}
+h1{margin:0;font-size:30px;letter-spacing:-.5px}header p{margin:4px 0 0;color:#74839b;font-size:17px}
+main{max-width:900px;margin:auto;padding:14px}.card{background:#fff;border-radius:24px;padding:20px;margin:12px 0;box-shadow:0 7px 25px rgba(31,55,90,.07)}
+.balance{background:#147ef5;color:white;text-align:center;padding:27px 18px;border-radius:22px}.balance small{font-size:17px}.balance strong{display:block;font-size:46px;margin-top:4px}
+.grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;text-align:center}.metric b{display:block;font-size:23px}.metric span{color:#75849b;font-size:14px}.green{color:#16864b}.red{color:#df4141}.orange{color:#d98700}
+.actions{display:grid;grid-template-columns:1fr 1fr;gap:12px}.btn{border:0;border-radius:18px;padding:15px;font-size:16px;font-weight:700;background:#e8f2ff;color:#0878e8}.btn.primary{background:#147ef5;color:#fff}.btn.danger{background:#fff0f0;color:#d33}.btn.small{padding:8px 11px;border-radius:12px;font-size:13px}
+h2{margin:0 0 15px;font-size:23px}.row{display:flex;justify-content:space-between;gap:12px;align-items:center;padding:13px 0;border-bottom:1px solid #e8edf3}.row:last-child{border-bottom:0}.muted{color:#75849b}.amount{font-weight:800;font-size:19px;white-space:nowrap}
+.entry{display:grid;grid-template-columns:48px 1fr auto;gap:12px;align-items:center}.icon{width:48px;height:48px;border-radius:15px;background:#edf4ff;display:grid;place-items:center;font-size:22px}.entry h3{margin:0 0 3px;font-size:17px}.entry .sub{font-size:13px;color:#75849b;line-height:1.35}.entry .right{text-align:right}.entry .date{font-size:12px;color:#75849b;margin-top:3px}
+input,select,textarea{width:100%;padding:13px 14px;border:1px solid #d8e0ea;border-radius:14px;background:#fff;font-size:16px;color:#17233b}label{font-size:13px;font-weight:700;color:#56657b;display:block;margin:10px 0 6px}.formgrid{display:grid;grid-template-columns:1fr 1fr;gap:10px}.full{grid-column:1/-1}.check{display:flex;align-items:center;gap:8px;margin:10px 0;color:#56657b;font-size:14px}.check input{width:auto}
+.tabs{display:grid;grid-template-columns:repeat(3,1fr);background:#edf2f8;border-radius:17px;padding:5px;margin:10px 0}.tabs button{border:0;background:transparent;padding:11px;border-radius:13px;color:#087ef5;font-size:15px}.tabs button.active{background:#fff;box-shadow:0 2px 9px rgba(0,0,0,.07);font-weight:700}
+.nav{position:fixed;bottom:0;left:0;right:0;background:#fff;border-top:1px solid #dfe5ed;display:grid;grid-template-columns:repeat(4,1fr);z-index:10;padding:8px 4px calc(8px + env(safe-area-inset-bottom))}.nav button{border:0;background:transparent;color:#78869a;font-size:12px;padding:5px}.nav button.active{color:#087ef5;font-weight:800}.nav span{display:block;font-size:22px;margin-bottom:2px}
+.view{display:none}.view.active{display:block}.hidden{display:none!important}.notice{padding:12px;border-radius:14px;background:#f2f7ff;color:#52627a;font-size:13px}.pill{padding:5px 9px;border-radius:999px;background:#eef3f8;font-size:12px}.inline{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+@media(max-width:520px){.formgrid{grid-template-columns:1fr}.full{grid-column:auto}.entry{grid-template-columns:42px 1fr auto}.icon{width:42px;height:42px}.balance strong{font-size:42px}}
+</style>
+</head>
+<body>
+<header><h1>YAKNWOOL</h1><p>Expense Manager · Version 1.1</p></header>
+<main>
+<section id="home" class="view active">
+<div class="card"><div class="balance"><small>Current Balance</small><strong id="balance">₹0</strong></div></div>
+<div class="card"><div class="grid3">
+<div class="metric"><b class="green" id="received">₹0</b><span>Received</span></div>
+<div class="metric"><b class="red" id="expense">₹0</b><span>Expense</span></div>
+<div class="metric"><b class="orange" id="advance">₹0</b><span>Advance</span></div>
+</div></div>
+<div class="card actions"><button class="btn primary" onclick="show('add')">＋ Add Entry</button><button class="btn" onclick="scanBill()">📷 Scan Bill</button></div>
+<div class="card"><h2>Expenses by Category</h2><div id="homeCats"></div></div>
+<div class="card"><h2>Recent Entries</h2><div id="recent"></div></div>
+</section>
+
+<section id="add" class="view">
+<div class="card"><h2 id="formTitle">Add Entry</h2>
+<div class="tabs"><button id="tExpense" class="active" onclick="setType('Expense')">Expense</button><button id="tAdvance" onclick="setType('Advance')">Advance</button><button id="tReceived" onclick="setType('Received')">Received</button></div>
+<div class="formgrid">
+<div><label>Date</label><input id="fDate" type="date"></div>
+<div><label>Amount</label><input id="fAmount" type="number" inputmode="decimal" min="0" step="0.01" placeholder="0"></div>
+<div><label>Person / Vendor</label><input id="fPerson" placeholder="e.g. Sunil"></div>
+<div><label>Category</label><select id="fCat"></select></div>
+<div><label>Payment Type</label><select id="fPay"><option>Cash</option><option>Bank Transfer</option><option>UPI</option><option>Card</option><option>Cheque</option></select></div>
+<div><label>Project</label><input id="fProject" placeholder="e.g. Hose Assembly"></div>
+<div class="full"><label>Description</label><input id="fDesc" placeholder="What was this payment for?"></div>
+<div class="full"><label>Remarks</label><textarea id="fRemarks" rows="2" placeholder="Optional notes"></textarea></div>
+<div class="full check"><input id="fRecovery" type="checkbox"><span>Advance recovery required</span></div>
+<div class="full check"><input id="fInvoice" type="checkbox"><span>Invoice / bill required</span></div>
+</div>
+<div class="actions" style="margin-top:15px"><button class="btn" onclick="cancelEdit()">Cancel</button><button class="btn primary" onclick="saveEntry()">Save Entry</button></div>
+</div></section>
+
+<section id="entries" class="view">
+<div class="card"><h2>Entries</h2><input id="search" placeholder="🔎 Search person, vendor, description, project..." oninput="renderEntries()">
+<div class="tabs"><button id="eAll" class="active" onclick="setFilter('All')">All</button><button id="eExp" onclick="setFilter('Expense')">Expenses</button><button id="eAdv" onclick="setFilter('Advance')">Advances</button></div>
+<div class="inline"><input id="month" type="month" onchange="renderEntries()" style="flex:1"><button class="btn small" onclick="clearFilters()">Clear</button></div></div>
+<div id="entryList"></div>
+</section>
+
+<section id="reports" class="view">
+<div class="card"><h2>Monthly Summary</h2><div class="formgrid"><div><label>Month</label><input id="reportMonth" type="month" onchange="renderReports()"></div><div><label>Project</label><select id="reportProject" onchange="renderReports()"><option value="">All Projects</option></select></div></div>
+<div id="summary" style="margin-top:12px"></div></div>
+<div class="card"><h2>Category Report</h2><div id="reportCats"></div></div>
+<div class="card"><h2>Advance Control</h2><div id="advances"></div></div>
+</section>
+
+<section id="more" class="view">
+<div class="card"><h2>Data</h2><div class="actions"><button class="btn primary" onclick="exportCSV()">⬇️ Export CSV</button><button class="btn" onclick="backup()">💾 Backup</button><button class="btn" onclick="document.getElementById('restoreFile').click()">♻️ Restore</button><button class="btn danger" onclick="resetData()">Reset all data</button></div><input id="restoreFile" class="hidden" type="file" accept=".json" onchange="restore(event)"></div>
+<div class="card"><h2>Categories</h2><div id="cats"></div><div class="inline" style="margin-top:12px"><input id="newCat" placeholder="New category" style="flex:1"><button class="btn small primary" onclick="addCategory()">Add</button></div></div>
+<div class="card"><h2>V1.1</h2><div class="notice">Local-first version. Your entries stay on this device/browser. Backup regularly. Cloud login, OCR and AI categorization are planned for V2.</div></div>
+</section>
+</main>
+<nav class="nav">
+<button class="active" data-view="home" onclick="show('home')"><span>⌂</span>Home</button>
+<button data-view="entries" onclick="show('entries')"><span>☷</span>Entries</button>
+<button data-view="reports" onclick="show('reports')"><span>▥</span>Reports</button>
+<button data-view="more" onclick="show('more')"><span>•••</span>More</button>
+</nav>
 <script>
-const K='yaknwoool_v1',C='yaknwoool_cat_v1';let cats=JSON.parse(localStorage.getItem(C)||'null')||['Investment / Received','Travel','Labour','Food','Tools & Equipment','Safety','Accommodation','Bank Charges','Electrical','Miscellaneous','Transfer'];let data=JSON.parse(localStorage.getItem(K)||'null')||[
-{d:'2026-03-10',t:'Received',c:'Investment / Received',p:'AIR',x:'Received from AIR',a:90000,pay:'Bank Transfer'},
-{d:'2026-03-11',t:'Expense',c:'Travel',p:'Sunil',x:'Sunil flight to VSKP',a:4052,pay:'Cash'},
-{d:'2026-03-11',t:'Expense',c:'Food',p:'Sunil',x:'Sunil food allowance',a:362,pay:'Cash'},
-{d:'2026-03-11',t:'Advance',c:'Labour',p:'Devendra',x:'Labour mobility',a:1800,pay:'Cash Advance',r:'Yes'},
-{d:'2026-03-11',t:'Expense',c:'Accommodation',p:'Sunil',x:'Room transaction',a:1600,pay:'Cash Advance'},
-{d:'2026-03-12',t:'Received',c:'Investment / Received',p:'AIR',x:'Received from AIR',a:60000,pay:'Bank Transfer'},
-{d:'2026-03-12',t:'Expense',c:'Tools & Equipment',p:'',x:'Reliable tools',a:5000,pay:'Cash'}
-];let typ='Expense',flt='All';const money=n=>'₹'+Number(n||0).toLocaleString('en-IN',{maximumFractionDigits:2});
-function saveLS(){localStorage.setItem(K,JSON.stringify(data));localStorage.setItem(C,JSON.stringify(cats))}
-function calc(){let r=0,e=0,a=0;data.forEach(x=>{if(x.t==='Received')r+=+x.a;if(x.t==='Expense')e+=+x.a;if(x.t==='Advance')a+=+x.a});return{r,e,a,b:r-e-a}}
-function render(){let z=calc();rec.textContent=money(z.r);exp.textContent=money(z.e);adv.textContent=money(z.a);bal.textContent=money(z.b);let m={};data.filter(x=>x.t!=='Received').forEach(x=>m[x.c]=(m[x.c]||0)+(+x.a));homeCats.innerHTML=Object.entries(m).sort((a,b)=>b[1]-a[1]).map(x=>`<div class="row"><span>${esc(x[0])}</span><b class="red">${money(x[1])}</b></div>`).join('')||'<div class="muted">No expenses</div>';recent.innerHTML=data.slice(0,5).map(row).join('')||'<div class="muted">No entries</div>';summary.innerHTML=`<div class="row"><span>Received</span><b class="green">${money(z.r)}</b></div><div class="row"><span>Expense</span><b class="red">${money(z.e)}</b></div><div class="row"><span>Advance</span><b class="orange">${money(z.a)}</b></div><div class="row"><span>Balance</span><b>${money(z.b)}</b></div>`;report.innerHTML=Object.entries(m).sort((a,b)=>b[1]-a[1]).map(x=>`<div class="row"><span>${esc(x[0])}</span><b>${money(x[1])}</b></div>`).join('')||'<div class="muted">No data</div>';let p={};data.filter(x=>x.t==='Advance').forEach(x=>p[x.p||'Unassigned']=(p[x.p||'Unassigned']||0)+(+x.a));advanceReport.innerHTML=Object.entries(p).map(x=>`<div class="row"><span>${esc(x[0])}</span><b class="orange">${money(x[1])}</b></div>`).join('')||'<div class="muted">No advances</div>';renderEntries();renderCats()}
-function row(x){return `<div class="card entry"><div class="icon">${x.t==='Received'?'💰':x.t==='Advance'?'👤':'🧾'}</div><div class="entrymain"><div class="entrytitle">${esc(x.x)}</div><div class="entrymeta">${esc(x.c)} · ${esc(x.p||'—')} · ${esc(x.pay||'')}</div></div><div class="right"><b class="${x.t==='Received'?'green':'red'}">${x.t==='Received'?'+':'−'}${money(x.a)}</b><div class="muted">${x.d}</div></div></div>`}
-function renderEntries(){let s=(q.value||'').toLowerCase();list.innerHTML=data.filter(x=>(flt==='All'||x.t===flt)&&`${x.x} ${x.p} ${x.c} ${x.pay}`.toLowerCase().includes(s)).map(row).join('')||'<div class="card muted">No matching entries</div>'}
-function filterBy(f,b){flt=f;document.querySelectorAll('#entries .tabs button').forEach(x=>x.classList.remove('sel'));b.classList.add('sel');renderEntries()}
-function show(id,b){document.querySelectorAll('.view').forEach(x=>x.classList.remove('active'));document.getElementById(id).classList.add('active');if(b){document.querySelectorAll('nav button').forEach(x=>x.classList.remove('on'));b.classList.add('on')}render()}
-function fill(){category.innerHTML=cats.map(x=>`<option>${esc(x)}</option>`).join('')}
-function openAdd(t){typ=t;setType(t);fill();date.value=new Date().toISOString().slice(0,10);desc.value='';person.value='';amount.value='';project.value='';remarks.value='';show('add')}
-function setType(t){typ=t;document.querySelectorAll('#add .tabs button').forEach(x=>x.classList.remove('sel'));document.getElementById('bt'+t).classList.add('sel')}
-function save(){if(!desc.value.trim()||!+amount.value)return alert('Please enter Description and Amount.');data.unshift({d:date.value,t:typ,c:category.value,p:person.value,x:desc.value,a:+amount.value,pay:payment.value,project:project.value,invoice:invoice.value,submitted:submitted.value,recovery:recovery.value,remarks:remarks.value});saveLS();show('entries');alert('Entry saved')}
-function scan(){alert('Camera/bill picker is ready for the next OCR integration. For V1, enter the bill details manually.')}
-function renderCats(){catSettings.innerHTML=cats.map((x,i)=>`<div class="row"><span>${esc(x)}</span>${i?`<button onclick="removeCat(${i})">Remove</button>`:''}</div>`).join('')}
-function addCat(){let x=prompt('Category name');if(x&&x.trim()&&!cats.includes(x.trim())){cats.push(x.trim());saveLS();render()}}
-function removeCat(i){if(confirm('Remove category? Existing entries stay unchanged.')){cats.splice(i,1);saveLS();render()}}
-function csv(){let h=['Date','Type','Category','Person','Description','Amount','Payment','Project','Invoice','Submitted','Recovery','Remarks'];let rows=data.map(x=>[x.d,x.t,x.c,x.p,x.x,x.a,x.pay,x.project||'',x.invoice||'',x.submitted||'',x.recovery||'',x.remarks||'']);let s=[h,...rows].map(r=>r.map(v=>`"${String(v??'').replace(/"/g,'""')}"`).join(',')).join('\n');download(new Blob([s],{type:'text/csv'}),'YAKNWOOL_Entries.csv')}
-function backup(){download(new Blob([JSON.stringify({version:1,data,cats},null,2)],{type:'application/json'}),'YAKNWOOL_Backup.json')}
-function restore(e){let f=e.target.files[0];if(!f)return;let r=new FileReader();r.onload=()=>{try{let x=JSON.parse(r.result);if(!Array.isArray(x.data))throw 0;data=x.data;cats=x.cats||cats;saveLS();render();alert('Backup restored')}catch(_){alert('Invalid backup')}};r.readAsText(f)}
-function download(b,n){let a=document.createElement('a');a.href=URL.createObjectURL(b);a.download=n;a.click()}
-function resetAll(){if(confirm('Reset all local data to the sample entries?')){localStorage.removeItem(K);localStorage.removeItem(C);location.reload()}}
-function esc(s){return String(s??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[m]))}
-fill();render();
-</script><script>if('serviceWorker' in navigator)navigator.serviceWorker.register('./sw.js');</script></body></html>
+const KEY='yaknwoool_v1', CATKEY='yaknwoool_cat_v1';
+const defaultCats=['Investment / Received','Travel','Labour','Food','Tools & Equipment','Safety','Accommodation','Bank Charges','Electrical','Miscellaneous','Transfer'];
+let data=JSON.parse(localStorage.getItem(KEY)||'null')||[
+{id:'1',date:'2026-03-10',type:'Received',cat:'Investment / Received',person:'AIR',amount:90000,pay:'Bank Transfer',project:'',desc:'Received from AIR',remarks:'',recovery:false,invoice:false},
+{id:'2',date:'2026-03-11',type:'Expense',cat:'Travel',person:'Sunil',amount:4052,pay:'Cash',project:'',desc:'Sunil flight to VSKP',remarks:'',recovery:false,invoice:false},
+{id:'3',date:'2026-03-11',type:'Expense',cat:'Food',person:'Sunil',amount:362,pay:'Cash',project:'',desc:'Sunil food allowance',remarks:'',recovery:false,invoice:false},
+{id:'4',date:'2026-03-11',type:'Advance',cat:'Labour',person:'Devendra',amount:1800,pay:'Cash',project:'',desc:'Labour mobility',remarks:'',recovery:true,invoice:false},
+{id:'5',date:'2026-03-11',type:'Expense',cat:'Accommodation',person:'Sunil',amount:1600,pay:'Cash',project:'',desc:'Room transaction',remarks:'',recovery:false,invoice:false},
+{id:'6',date:'2026-03-12',type:'Received',cat:'Investment / Received',person:'AIR',amount:60000,pay:'Bank Transfer',project:'',desc:'Received from AIR',remarks:'',recovery:false,invoice:false},
+{id:'7',date:'2026-03-12',type:'Expense',cat:'Tools & Equipment',person:'Reliable',amount:5000,pay:'Cash',project:'',desc:'Reliable tools',remarks:'',recovery:false,invoice:false}
+];
+let cats=JSON.parse(localStorage.getItem(CATKEY)||'null')||defaultCats;
+let currentType='Expense', editId=null, entryFilter='All';
+
+const money=n=>'₹'+Number(n||0).toLocaleString('en-IN',{maximumFractionDigits:2});
+const save=()=>{localStorage.setItem(KEY,JSON.stringify(data));localStorage.setItem(CATKEY,JSON.stringify(cats));};
+const esc=s=>String(s??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+function totals(arr){let r=0,e=0,a=0;arr.forEach(x=>{if(x.type==='Received')r+=+x.amount;else if(x.type==='Advance')a+=+x.amount;else e+=+x.amount});return {r,e,a,b:r-e-a};}
+function show(v){document.querySelectorAll('.view').forEach(x=>x.classList.remove('active'));document.getElementById(v).classList.add('active');document.querySelectorAll('.nav button').forEach(x=>x.classList.toggle('active',x.dataset.view===v));if(v==='home')renderHome();if(v==='entries')renderEntries();if(v==='reports')renderReports();if(v==='more')renderMore();window.scrollTo(0,0)}
+function setType(t){currentType=t;['Expense','Advance','Received'].forEach(x=>document.getElementById('t'+x).classList.toggle('active',x===t));populateCats();document.getElementById('formTitle').textContent=editId?'Edit Entry':'Add '+t}
+function populateCats(){let s=document.getElementById('fCat');s.innerHTML=cats.map(c=>`<option>${esc(c)}</option>`).join('');if(currentType==='Received')s.value='Investment / Received'}
+function resetForm(){editId=null;document.getElementById('formTitle').textContent='Add Entry';document.getElementById('fDate').value=new Date().toISOString().slice(0,10);document.getElementById('fAmount').value='';document.getElementById('fPerson').value='';document.getElementById('fProject').value='';document.getElementById('fDesc').value='';document.getElementById('fRemarks').value='';document.getElementById('fRecovery').checked=false;document.getElementById('fInvoice').checked=false;document.getElementById('fPay').value='Cash';setType('Expense')}
+function saveEntry(){let amount=+document.getElementById('fAmount').value;if(!amount)return alert('Please enter an amount.');let obj={id:editId||String(Date.now()),date:document.getElementById('fDate').value,type:currentType,cat:document.getElementById('fCat').value,person:document.getElementById('fPerson').value.trim(),amount,pay:document.getElementById('fPay').value,project:document.getElementById('fProject').value.trim(),desc:document.getElementById('fDesc').value.trim(),remarks:document.getElementById('fRemarks').value.trim(),recovery:document.getElementById('fRecovery').checked,invoice:document.getElementById('fInvoice').checked};if(editId)data=data.map(x=>x.id===editId?obj:x);else data.unshift(obj);save();resetForm();show('entries')}
+function editEntry(id){let x=data.find(a=>a.id===id);if(!x)return;editId=id;currentType=x.type;show('add');document.getElementById('fDate').value=x.date;document.getElementById('fAmount').value=x.amount;document.getElementById('fPerson').value=x.person;document.getElementById('fProject').value=x.project||'';document.getElementById('fDesc').value=x.desc||'';document.getElementById('fRemarks').value=x.remarks||'';document.getElementById('fRecovery').checked=!!x.recovery;document.getElementById('fInvoice').checked=!!x.invoice;document.getElementById('fPay').value=x.pay||'Cash';setType(x.type);document.getElementById('fCat').value=x.cat}
+function deleteEntry(id){if(confirm('Delete this entry?')){data=data.filter(x=>x.id!==id);save();renderEntries();renderHome()}}
+function cancelEdit(){resetForm();show('entries')}
+function setFilter(f){entryFilter=f;['All','Expense','Advance'].forEach(x=>document.getElementById('e'+(x==='All'?'All':x==='Expense'?'Exp':'Adv')).classList.toggle('active',x===f));renderEntries()}
+function clearFilters(){document.getElementById('search').value='';document.getElementById('month').value='';entryFilter='All';setFilter('All')}
+function filteredEntries(){let q=document.getElementById('search').value.toLowerCase(),m=document.getElementById('month').value;return data.filter(x=>(entryFilter==='All'||x.type===entryFilter)&&(!m||x.date.startsWith(m))&&(!q||[x.person,x.desc,x.cat,x.project,x.pay].join(' ').toLowerCase().includes(q))).sort((a,b)=>b.date.localeCompare(a.date)||b.id.localeCompare(a.id))}
+function entryHTML(x){let sign=x.type==='Received'?'+':'−', cls=x.type==='Received'?'green':'red', icon=x.type==='Advance'?'👤':x.type==='Received'?'💰':'🧾';return `<div class="card"><div class="entry"><div class="icon">${icon}</div><div><h3>${esc(x.desc||x.cat)}</h3><div class="sub">${esc(x.cat)} · ${esc(x.person||'—')} · ${esc(x.pay)}${x.project?' · '+esc(x.project):''}${x.type==='Advance'?' · Cash Advance':''}</div>${x.recovery?'<span class="pill">Recovery required</span> ':''}${x.invoice?'<span class="pill">Bill required</span>':''}</div><div class="right"><div class="amount ${cls}">${sign}${money(x.amount).slice(1)}</div><div class="date">${esc(x.date)}</div><div class="inline" style="justify-content:flex-end;margin-top:5px"><button class="btn small" onclick="editEntry('${x.id}')">Edit</button><button class="btn small danger" onclick="deleteEntry('${x.id}')">Delete</button></div></div></div></div>`}
+function renderEntries(){document.getElementById('entryList').innerHTML=filteredEntries().map(entryHTML).join('')||'<div class="card muted">No entries found.</div>'}
+function renderHome(){let t=totals(data);document.getElementById('balance').textContent=money(t.b);document.getElementById('received').textContent=money(t.r);document.getElementById('expense').textContent=money(t.e);document.getElementById('advance').textContent=money(t.a);let m={};data.filter(x=>x.type!=='Received').forEach(x=>m[x.cat]=(m[x.cat]||0)+ +x.amount);document.getElementById('homeCats').innerHTML=Object.entries(m).sort((a,b)=>b[1]-a[1]).map(([k,v])=>`<div class="row"><span>${esc(k)}</span><b class="red">${money(v)}</b></div>`).join('')||'<div class="muted">No expenses yet.</div>';document.getElementById('recent').innerHTML=data.slice().sort((a,b)=>b.date.localeCompare(a.date)||b.id.localeCompare(a.id)).slice(0,5).map(entryHTML).join('')}
+function renderReports(){let m=document.getElementById('reportMonth').value||'2026-03';let p=document.getElementById('reportProject').value;let arr=data.filter(x=>x.date.startsWith(m)&&(!p||x.project===p)),t=totals(arr);document.getElementById('summary').innerHTML=`<div class="row"><span>Received</span><b class="green">${money(t.r)}</b></div><div class="row"><span>Expense</span><b class="red">${money(t.e)}</b></div><div class="row"><span>Advance</span><b class="orange">${money(t.a)}</b></div><div class="row"><span>Balance</span><b>${money(t.b)}</b></div>`;let cm={};arr.filter(x=>x.type!=='Received').forEach(x=>cm[x.cat]=(cm[x.cat]||0)+ +x.amount);document.getElementById('reportCats').innerHTML=Object.entries(cm).sort((a,b)=>b[1]-a[1]).map(([k,v])=>`<div class="row"><span>${esc(k)}</span><b>${money(v)}</b></div>`).join('')||'<div class="muted">No expense data.</div>';let adv={};arr.filter(x=>x.type==='Advance').forEach(x=>adv[x.person||'Unassigned']=(adv[x.person||'Unassigned']||0)+ +x.amount);document.getElementById('advances').innerHTML=Object.entries(adv).map(([k,v])=>`<div class="row"><span>${esc(k)}</span><b class="orange">${money(v)}</b></div>`).join('')||'<div class="muted">No advances.</div>';let ps=[...new Set(data.map(x=>x.project).filter(Boolean))];document.getElementById('reportProject').innerHTML='<option value="">All Projects</option>'+ps.map(x=>`<option>${esc(x)}</option>`).join('');document.getElementById('reportProject').value=p}
+function renderMore(){document.getElementById('cats').innerHTML=cats.map((c,i)=>`<div class="row"><span>${esc(c)}</span>${i===0?'':`<button class="btn small" onclick="removeCategory(${i})">Remove</button>`}</div>`).join('')}
+function addCategory(){let x=document.getElementById('newCat').value.trim();if(x&&!cats.includes(x)){cats.push(x);save();document.getElementById('newCat').value='';renderMore();populateCats()}}
+function removeCategory(i){if(confirm('Remove this category? Existing entries will remain unchanged.')){cats.splice(i,1);save();renderMore();populateCats()}}
+function exportCSV(){let head=['ID','Date','Type','Category','Person/Vendor','Amount','Payment Type','Project','Description','Remarks','Recovery Required','Invoice Required'];let rows=data.map(x=>[x.id,x.date,x.type,x.cat,x.person,x.amount,x.pay,x.project,x.desc,x.remarks,x.recovery?'Yes':'No',x.invoice?'Yes':'No']);let csv=[head,...rows].map(r=>r.map(v=>`"${String(v??'').replace(/"/g,'""')}"`).join(',')).join('\n');download(new Blob([csv],{type:'text/csv'}),'YAKNWOOL_entries.csv','text/csv')}
+function backup(){download(new Blob([JSON.stringify({data,cats},null,2)],{type:'application/json'}),'YAKNWOOL_backup.json','application/json')}
+function restore(e){let f=e.target.files[0];if(!f)return;let r=new FileReader();r.onload=()=>{try{let o=JSON.parse(r.result);if(!Array.isArray(o.data))throw Error();data=o.data;cats=Array.isArray(o.cats)?o.cats:cats;save();renderHome();alert('Backup restored successfully.')}catch{alert('Invalid backup file.')}};r.readAsText(f)}
+function resetData(){if(confirm('This will remove all local entries. Continue?')){data=[];save();renderHome();renderEntries();renderReports()}}
+function download(blob,name,type){let a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=name;a.click();setTimeout(()=>URL.revokeObjectURL(a.href),1000)}
+function scanBill(){alert('Bill scanner is reserved for V2 OCR. For now, use Add Entry and attach the bill in your phone records.')}
+document.getElementById('reportMonth').value='2026-03';resetForm();renderHome();renderEntries();renderReports();renderMore();
+if('serviceWorker' in navigator)navigator.serviceWorker.register('sw.js');
+</script>
+</body>
+</html>
