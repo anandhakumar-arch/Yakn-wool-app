@@ -18,7 +18,7 @@ input,select,textarea{width:100%;padding:12px;border:1px solid #d5dee9;border-ra
 .modal{position:fixed;inset:0;background:rgba(15,25,40,.48);z-index:30;display:grid;place-items:end center;padding:12px}.modalCard{width:100%;max-width:620px;max-height:88vh;overflow:auto;background:#fff;border-radius:24px;padding:18px;box-shadow:0 18px 50px rgba(0,0,0,.22)}.modalHead{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;margin-bottom:8px}.iconBtn{border:0;background:#edf2f8;color:#17233b;border-radius:12px;width:42px;height:42px;font-size:18px}.masterItem{padding:12px 0;border-bottom:1px solid #e9edf2}.masterItem:last-child{border-bottom:0}.masterTop{display:flex;justify-content:space-between;gap:10px;align-items:center}.masterMeta{font-size:12px;color:#74839b;margin-top:3px}.masterActions{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px}.statusActive{color:#16864b}.statusInactive{color:#d84040}.addBox{background:#f7faff;border-radius:16px;padding:13px;margin:12px 0}.empty{padding:14px 0;color:#74839b;font-size:13px}
 @media(max-width:520px){.formgrid{grid-template-columns:1fr}.full{grid-column:auto}.entry{grid-template-columns:40px 1fr auto}.icon{width:40px;height:40px}.grid4{grid-template-columns:repeat(2,1fr)}}
 </style></head><body>
-<header><h1>YAKNWOOL</h1><p>Expense Manager · Standalone V1.4.1</p></header><main>
+<header><h1>YAKNWOOL</h1><p>Expense Manager · Standalone V1.4.2</p></header><main>
 
 <section id="home" class="view active">
 <div class="card"><div class="balance"><small>Current Balance</small><strong id="balance">₹0</strong></div></div>
@@ -206,6 +206,31 @@ function removeAttachment(){currentAttachment='';currentAttachmentCapturedAt='';
 function openContractorForm(id=''){contractorEditId=id;let c=contractors.find(x=>x.id===id);document.getElementById('cFormTitle').textContent=c?'Edit Contractor':'Add Contractor';document.getElementById('cName').value=c?.name||'';document.getElementById('cContact').value=c?.contact||'';document.getElementById('cMobile').value=c?.mobile||'';document.getElementById('cProject').innerHTML=projects.filter(x=>x.status==='Active').map(x=>`<option>${esc(x.name)}</option>`).join('');document.getElementById('cProject').value=c?.project||projects.find(x=>x.status==='Active')?.name||'';document.getElementById('cStatus').value=c?.status||'Active';document.getElementById('cPassNo').value=c?.passNo||'';document.getElementById('cPassFrom').value=c?.passFrom||'';document.getElementById('cPassTo').value=c?.passTo||'';let form=document.getElementById('contractorForm');form.classList.remove('hidden');form.scrollIntoView({behavior:'smooth'})}
 function closeContractorForm(){document.getElementById('contractorForm').classList.add('hidden');contractorEditId=null}
 async function saveContractor(){try{const g=id=>document.getElementById(id);let n=g('cName').value.trim();if(!n)return alert('Enter contractor name.');let mobile=g('cMobile').value.replace(/\D/g,'');if(g('cMobile').value.trim() && !/^\d{10}$/.test(mobile))return alert('Mobile number must be exactly 10 digits.');let passNo=g('cPassNo').value.trim();let from=g('cPassFrom').value,to=g('cPassTo').value;if(!passNo)return alert('Pass Number is mandatory.');if(!from||!to)return alert('Pass Valid From and Pass Valid To are mandatory.');if(to<from)return alert('Pass Valid To cannot be before Valid From.');let old=contractors.find(x=>x.id===contractorEditId),newStatus=g('cStatus').value;if(old&&old.status==='Active'&&newStatus==='Inactive'){if(!requireDeactivation('contractor '+n,()=>{}))return}let o={id:contractorEditId||nextId('CON',contractors),name:n,contact:g('cContact').value.trim(),mobile,status:newStatus,project:g('cProject').value,passNo,passFrom:from,passTo:to,employees:old?.employees||[]};if(contractorEditId)contractors=contractors.map(x=>x.id===contractorEditId?o:x);else contractors.push(o);if(!(await persistOnly('contractors'))){storageError();return}closeContractorForm();renderContractors();alert('Contractor saved successfully.')}catch(err){console.error(err);alert('Could not save contractor. '+(err?.message||'Please try again.'))}}
+
+function passBadge(from,to){
+  if(!from||!to) return '';
+  const today=new Date(); today.setHours(0,0,0,0);
+  const end=new Date(to+'T00:00:00');
+  const days=Math.ceil((end-today)/86400000);
+  let cls='statusActive', text='Pass valid';
+  if(days<0){cls='statusInactive';text='⚠️ Pass expired';}
+  else if(days<=7){cls='statusInactive';text='⚠️ Pass expires in '+days+' day'+(days===1?'':'s');}
+  else if(days<=30){text='Pass expires in '+days+' days';}
+  return `<div class="masterMeta"><span class="${cls}">${text}</span></div>`;
+}
+function editContractor(id){openContractorForm(id)}
+async function toggleContractor(id){
+  const c=contractors.find(x=>x.id===id); if(!c)return;
+  if(c.status==='Active'){
+    if(!requireDeactivation('contractor '+c.name,()=>{}))return;
+    c.status='Inactive';
+  }else{
+    c.status='Active';
+  }
+  if(!(await persistOnly('contractors'))){storageError();return;}
+  renderContractors();
+}
+
 function renderContractors(){
   const box=document.getElementById('contractorList');
   if(!box)return;
